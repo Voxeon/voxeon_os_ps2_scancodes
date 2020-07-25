@@ -181,6 +181,8 @@ impl Layout for USStandardLayout {
                 SymbolPeriod => '.',
                 SymbolForwardSlash => '/',
                 SymbolAsterisk => '*', // This is a symbol on the keypad
+                Space => ' ',
+                Tab => '\t',
                 _ => return None,
             };
         }
