@@ -236,7 +236,7 @@ impl Reader {
             0x19 => return create_pressed_key!(ScanType::CharP),
 
             0x1a => return create_pressed_key!(ScanType::SymbolOpenSquareBracket),
-            0x1b => return create_pressed_key!(ScanType::SymbolOpenSquareBracket),
+            0x1b => return create_pressed_key!(ScanType::SymbolCloseSquareBracket),
             0x1c => return create_pressed_key!(ScanType::Enter),
             0x1d => return create_pressed_key!(ScanType::LeftCtrl),
 
