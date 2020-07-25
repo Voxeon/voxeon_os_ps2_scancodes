@@ -61,9 +61,9 @@ impl Layout for USStandardLayout {
         use ScanType::*;
         let ch;
 
-        if modifiers.shift_down() {   
+        if modifiers.shift_down() {
             // Shift is being held down
-            
+
             ch = match key.scan_type() {
                 // Check if the character is on the keypad
                 CharA => 'A',
@@ -106,7 +106,7 @@ impl Layout for USStandardLayout {
                 SymbolForwardSlash => '?',
                 SymbolAsterisk => '*', // This is a symbol on the keypad
                 Space => ' ',
-                Tab => '\t',                
+                Tab => '\t',
                 _ => {
                     if key.keypad() {
                         match key.scan_type() {
@@ -130,8 +130,6 @@ impl Layout for USStandardLayout {
                     }
                 }
             };
-            
-
         } else {
             ch = match key.scan_type() {
                 Num0 => '0',
@@ -191,7 +189,8 @@ impl Layout for USStandardLayout {
             // Invert case
             if ch.is_ascii_lowercase() {
                 return Some(ch.to_ascii_uppercase());
-            } else if ch.is_ascii_uppercase() { // If for some reason ch is not ASCII we ignore it.
+            } else if ch.is_ascii_uppercase() {
+                // If for some reason ch is not ASCII we ignore it.
                 return Some(ch.to_ascii_lowercase());
             }
         }

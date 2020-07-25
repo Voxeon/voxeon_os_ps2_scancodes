@@ -152,10 +152,7 @@ pub struct Key {
 }
 
 impl Key {
-    pub fn new(
-        scan_type: ScanType,
-        state: KeyState,
-    ) -> Self {
+    pub fn new(scan_type: ScanType, state: KeyState) -> Self {
         return Self {
             scan_type,
             state,
@@ -163,10 +160,7 @@ impl Key {
         };
     }
 
-    pub fn new_keypad(
-        scan_type: ScanType,
-        state: KeyState,
-    ) -> Self {
+    pub fn new_keypad(scan_type: ScanType, state: KeyState) -> Self {
         return Self {
             scan_type,
             state,

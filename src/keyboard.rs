@@ -1,10 +1,14 @@
-use super::{Reader, ReaderMode, Key, ScanType};
-use super::layout::{Layout, KeyModifierState};
+use super::layout::{KeyModifierState, Layout};
+use super::{Key, KeyState, Reader, ReaderMode, ScanType};
 
-pub struct Keyboard<T> where T: Layout{
+pub struct Keyboard<T>
+where
+    T: Layout,
+{
     reader: Reader,
     modifiers: KeyModifierState,
     layout: T,
+    translation_state: Option<KeyState>,
 }
 
 impl<T: Layout> Keyboard<T> {
@@ -13,7 +17,13 @@ impl<T: Layout> Keyboard<T> {
             reader: Reader::new(mode),
             modifiers: KeyModifierState::new(),
             layout,
+            translation_state: None,
         };
+    }
+
+    // Sets whether we should only return a character for a specific state. None if always return.
+    pub fn set_translation_state(&mut self, state: Option<KeyState>) {
+        self.translation_state = state;
     }
 
     pub fn current_state(&self) -> KeyModifierState {
@@ -23,7 +33,23 @@ impl<T: Layout> Keyboard<T> {
     pub fn input_byte(&mut self, byte: u8) -> Option<char> {
         let k = self.raw_input_byte(byte)?;
 
-        return self.layout.key_into_char(&self.modifiers, k);
+        match self.translation_state {
+            Some(KeyState::Pressed) => {
+                if k.is_pressed() {
+                    return self.layout.key_into_char(&self.modifiers, k);
+                } else {
+                    return None;
+                }
+            }
+            Some(KeyState::Released) => {
+                if k.is_pressed() {
+                    return None;
+                } else {
+                    return self.layout.key_into_char(&self.modifiers, k);
+                }
+            }
+            None => return self.layout.key_into_char(&self.modifiers, k),
+        }
     }
 
     pub fn raw_input_byte(&mut self, byte: u8) -> Option<Key> {
@@ -41,7 +67,7 @@ impl<T: Layout> Keyboard<T> {
                 self.check_apply_modifiers(&k);
 
                 return Ok(Some(k));
-            },
+            }
             _ => return res,
         }
     }
@@ -59,21 +85,21 @@ impl<T: Layout> Keyboard<T> {
             ScanType::NumLock => {
                 // Toggle only when pressed
                 if key.is_pressed() {
-                    self.modifiers.num_lock =  !self.modifiers.num_lock;
+                    self.modifiers.num_lock = !self.modifiers.num_lock;
                 }
-            },
+            }
             ScanType::CapsLock => {
                 // Toggle only when pressed
                 if key.is_pressed() {
                     self.modifiers.caps_lock = !self.modifiers.caps_lock;
                 }
-            },
+            }
             ScanType::ScrollLock => {
                 // Toggle only when pressed
                 if key.is_pressed() {
-                    self.modifiers.scroll_lock =  !self.modifiers.scroll_lock;
+                    self.modifiers.scroll_lock = !self.modifiers.scroll_lock;
                 }
-            },
+            }
             _ => (),
         }
     }
@@ -81,8 +107,8 @@ impl<T: Layout> Keyboard<T> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::layout::USStandardLayout;
+    use super::*;
 
     mod set1 {
         use super::*;

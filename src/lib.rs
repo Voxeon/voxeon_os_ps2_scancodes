@@ -1,10 +1,10 @@
 #![no_std]
-mod scan_code_set;
+mod keyboard;
 mod layout;
 mod reader;
-mod keyboard;
+mod scan_code_set;
 
 pub use keyboard::Keyboard;
-pub use reader::{Reader, ReaderMode};
 pub use layout::{KeyModifierState, Layout, USStandardLayout};
-pub use scan_code_set::{Key, ScanType, KeyState};
+pub use reader::{Reader, ReaderMode};
+pub use scan_code_set::{Key, KeyState, ScanType};

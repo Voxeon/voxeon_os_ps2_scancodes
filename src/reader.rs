@@ -1,4 +1,4 @@
-use super::{Key, ScanType, KeyState};
+use super::{Key, KeyState, ScanType};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ReaderMode {
@@ -72,14 +72,13 @@ impl Reader {
                 return Ok(k);
             } else if code == 0xe0 || code == 0xe1 {
                 // Multimedia key so add it to the history
-            
+
                 self.history_scan_codes[0] = code;
 
                 return Ok(None);
             } else {
                 return Ok(None);
             }
-            
         } else if first_free == 1 {
             // The first code should be 0xe0, we need to check this. Otherwise if it is 0xe1 we should store the next code
 
@@ -92,7 +91,6 @@ impl Reader {
 
                 self.history_scan_codes[1] = code;
                 return Ok(None);
-
             } else if self.history_scan_codes[0] != 0xe0 {
                 self.zero_scan_codes();
                 return Err("Invalid previous scan code.");
@@ -109,7 +107,8 @@ impl Reader {
             let k = Self::map_media_scan_code_s1(code);
             self.zero_scan_codes();
             return Ok(k);
-        } else if first_free == 2 { // If the buffer reaches this size we know we have only 3 possible characters
+        } else if first_free == 2 {
+            // If the buffer reaches this size we know we have only 3 possible characters
             let previous_code = self.history_scan_codes[1];
 
             if previous_code == 0x2a || previous_code == 0xb7 {
@@ -119,7 +118,7 @@ impl Reader {
                     return Err("Invalid scan code history.");
                 }
                 self.history_scan_codes[2] = code;
-                    
+
                 return Ok(None);
             } else if previous_code == 0x1d {
                 if code != 0x45 {
@@ -129,12 +128,12 @@ impl Reader {
                 }
 
                 self.history_scan_codes[2] = code;
-                    
+
                 return Ok(None);
-            }else {
+            } else {
                 self.zero_scan_codes();
 
-                return Err("Invalid scan code history.")
+                return Err("Invalid scan code history.");
             }
         } else if first_free == 3 {
             let previous_code = self.history_scan_codes[2];
@@ -144,7 +143,7 @@ impl Reader {
 
                 if code == 0x37 {
                     return Ok(Some(Key::new(ScanType::PrintScreen, KeyState::Pressed)));
-                }else if code == 0xaa {
+                } else if code == 0xaa {
                     return Ok(Some(Key::new(ScanType::PrintScreen, KeyState::Released)));
                 } else {
                     return Err("Invalid scan code expected 0x37 or 0xaa.");
@@ -161,7 +160,7 @@ impl Reader {
             } else {
                 self.zero_scan_codes();
 
-                return Err("Invalid scan code history.")
+                return Err("Invalid scan code history.");
             }
         } else if first_free == 4 {
             if self.history_scan_codes[3] != 0xe1 {
@@ -186,7 +185,7 @@ impl Reader {
             if code != 0xc5 {
                 self.zero_scan_codes();
                 return Err("Invalid scan code expected 0xc5");
-            } 
+            }
 
             self.zero_scan_codes();
             return Ok(Some(Key::new(ScanType::Pause, KeyState::Pressed)));
@@ -197,19 +196,15 @@ impl Reader {
 
     fn map_simple_scan_code_s1(code: u8) -> Option<Key> {
         macro_rules! create_pressed_key {
-            ($scan_type:expr) => {
-                {
-                    Some(Key::new($scan_type, KeyState::Pressed))
-                }
-            };
+            ($scan_type:expr) => {{
+                Some(Key::new($scan_type, KeyState::Pressed))
+            }};
         }
 
         macro_rules! create_pressed_keypad_key {
-            ($scan_type:expr) => {
-                {
-                    Some(Key::new_keypad($scan_type, KeyState::Pressed))
-                }
-            };
+            ($scan_type:expr) => {{
+                Some(Key::new_keypad($scan_type, KeyState::Pressed))
+            }};
         }
 
         match code {
@@ -260,7 +255,7 @@ impl Reader {
             0x29 => return create_pressed_key!(ScanType::SymbolBacktick),
             0x2a => return create_pressed_key!(ScanType::LeftShift),
             0x2b => return create_pressed_key!(ScanType::SymbolBackslash), // '\'
-            
+
             0x2c => return create_pressed_key!(ScanType::CharZ),
             0x2d => return create_pressed_key!(ScanType::CharX),
             0x2e => return create_pressed_key!(ScanType::CharC),
@@ -311,13 +306,10 @@ impl Reader {
             0x57 => return create_pressed_key!(ScanType::F11),
             0x58 => return create_pressed_key!(ScanType::F12),
 
-
             // Released keys
-            0x81 ..= 0xd3 => {
-                match Self::map_simple_scan_code_s1(code - 0x80) {
-                    Some(n) => return Some(n.inverted_state()),
-                    None => return None,
-                }
+            0x81..=0xd3 => match Self::map_simple_scan_code_s1(code - 0x80) {
+                Some(n) => return Some(n.inverted_state()),
+                None => return None,
             },
 
             0xd7 => Some(Key::new(ScanType::F11, KeyState::Released)),
@@ -329,19 +321,15 @@ impl Reader {
 
     fn map_media_scan_code_s1(code: u8) -> Option<Key> {
         macro_rules! create_pressed_key {
-            ($scan_type:expr) => {
-                {
-                    Some(Key::new($scan_type, KeyState::Pressed))
-                }
-            };
+            ($scan_type:expr) => {{
+                Some(Key::new($scan_type, KeyState::Pressed))
+            }};
         }
 
         macro_rules! create_pressed_keypad_key {
-            ($scan_type:expr) => {
-                {
-                    Some(Key::new_keypad($scan_type, KeyState::Pressed))
-                }
-            };
+            ($scan_type:expr) => {{
+                Some(Key::new_keypad($scan_type, KeyState::Pressed))
+            }};
         }
 
         match code {
@@ -382,17 +370,14 @@ impl Reader {
             0x6b => return create_pressed_key!(ScanType::MyComputer),
             0x6c => return create_pressed_key!(ScanType::Email),
             0x6d => return create_pressed_key!(ScanType::MediaSelect),
-            0x90 ..= 0xed => {
-                match Self::map_media_scan_code_s1(code - 0x80) {
-                    Some(n) => return Some(n.inverted_state()),
-                    None => return None,
-                }
+            0x90..=0xed => match Self::map_media_scan_code_s1(code - 0x80) {
+                Some(n) => return Some(n.inverted_state()),
+                None => return None,
             },
             _ => return None,
         }
     }
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -404,56 +389,68 @@ mod tests {
         #[test]
         fn test_simple_scan_1() {
             let mut reader = Reader::new(ReaderMode::Set1);
-    
-            assert_eq!(reader.input_scan_code(0x22).unwrap().unwrap(), Key::new(ScanType::CharG, KeyState::Pressed));
+
+            assert_eq!(
+                reader.input_scan_code(0x22).unwrap().unwrap(),
+                Key::new(ScanType::CharG, KeyState::Pressed)
+            );
         }
 
         #[test]
         fn test_simple_scan_2() {
             let mut reader = Reader::new(ReaderMode::Set1);
-    
-            assert_eq!(reader.input_scan_code(0x57).unwrap().unwrap(), Key::new(ScanType::F11, KeyState::Pressed));
+
+            assert_eq!(
+                reader.input_scan_code(0x57).unwrap().unwrap(),
+                Key::new(ScanType::F11, KeyState::Pressed)
+            );
         }
 
         #[test]
         fn test_simple_scan_3() {
             let mut reader = Reader::new(ReaderMode::Set1);
-    
-            assert_eq!(reader.input_scan_code(0x57 + 0x80).unwrap().unwrap(), Key::new(ScanType::F11, KeyState::Released));
+
+            assert_eq!(
+                reader.input_scan_code(0x57 + 0x80).unwrap().unwrap(),
+                Key::new(ScanType::F11, KeyState::Released)
+            );
         }
 
         #[test]
         fn test_simple_scan_4() {
             let mut reader = Reader::new(ReaderMode::Set1);
-    
-            assert_eq!(reader.input_scan_code(0xa0).unwrap().unwrap(), Key::new(ScanType::CharD, KeyState::Released));
+
+            assert_eq!(
+                reader.input_scan_code(0xa0).unwrap().unwrap(),
+                Key::new(ScanType::CharD, KeyState::Released)
+            );
         }
 
         #[test]
         fn test_simple_scan_5() {
             let mut reader = Reader::new(ReaderMode::Set1);
-    
+
             assert!(reader.input_scan_code(0xe0).unwrap().is_none());
         }
 
         #[test]
         fn test_simple_scan_6() {
             let mut reader = Reader::new(ReaderMode::Set1);
-    
+
             assert!(reader.input_scan_code(0xe1).unwrap().is_none());
         }
 
         #[test]
         fn test_failed_scan_1() {
             let mut reader = Reader::new(ReaderMode::Set1);
-    
+
             assert!(reader.input_scan_code(0xde).unwrap().is_none());
         }
 
         #[test]
         fn test_failed_scan_2() {
             let mut reader = Reader::new(ReaderMode::Set1);
-    
+
             assert!(reader.input_scan_code(0xe0).unwrap().is_none());
             assert!(reader.input_scan_code(0xe0).unwrap().is_none());
         }
@@ -461,100 +458,150 @@ mod tests {
         #[test]
         fn test_media_scan_1() {
             let mut reader = Reader::new(ReaderMode::Set1);
-    
+
             assert!(reader.input_scan_code(0xe0).unwrap().is_none());
-            assert_eq!(reader.input_scan_code(0xe8).unwrap().unwrap(), Key::new(ScanType::WWWStop, KeyState::Released));
+            assert_eq!(
+                reader.input_scan_code(0xe8).unwrap().unwrap(),
+                Key::new(ScanType::WWWStop, KeyState::Released)
+            );
         }
 
         #[test]
         fn test_media_scan_2() {
             let mut reader = Reader::new(ReaderMode::Set1);
-    
+
             assert!(reader.input_scan_code(0xe0).unwrap().is_none());
-            assert_eq!(reader.input_scan_code(0x68).unwrap().unwrap(), Key::new(ScanType::WWWStop, KeyState::Pressed));
+            assert_eq!(
+                reader.input_scan_code(0x68).unwrap().unwrap(),
+                Key::new(ScanType::WWWStop, KeyState::Pressed)
+            );
         }
 
         #[test]
         fn test_media_scan_3() {
             let mut reader = Reader::new(ReaderMode::Set1);
-    
+
             assert!(reader.input_scan_code(0xe0).unwrap().is_none());
-            assert_eq!(reader.input_scan_code(0x49).unwrap().unwrap(), Key::new(ScanType::PageUp, KeyState::Pressed));
+            assert_eq!(
+                reader.input_scan_code(0x49).unwrap().unwrap(),
+                Key::new(ScanType::PageUp, KeyState::Pressed)
+            );
         }
 
         #[test]
         fn test_media_scan_4() {
             let mut reader = Reader::new(ReaderMode::Set1);
-    
+
             assert!(reader.input_scan_code(0xe0).unwrap().is_none());
-            assert_eq!(reader.input_scan_code(0xc9).unwrap().unwrap(), Key::new(ScanType::PageUp, KeyState::Released));
+            assert_eq!(
+                reader.input_scan_code(0xc9).unwrap().unwrap(),
+                Key::new(ScanType::PageUp, KeyState::Released)
+            );
         }
 
         #[test]
         fn test_print_screen_pressed() {
             let mut reader = Reader::new(ReaderMode::Set1);
-    
+
             assert!(reader.input_scan_code(0xe0).unwrap().is_none());
             assert!(reader.input_scan_code(0x2a).unwrap().is_none());
             assert!(reader.input_scan_code(0xe0).unwrap().is_none());
-            assert_eq!(reader.input_scan_code(0x37).unwrap().unwrap(), Key::new(ScanType::PrintScreen, KeyState::Pressed));
+            assert_eq!(
+                reader.input_scan_code(0x37).unwrap().unwrap(),
+                Key::new(ScanType::PrintScreen, KeyState::Pressed)
+            );
         }
 
         #[test]
         fn test_print_screen_released() {
             let mut reader = Reader::new(ReaderMode::Set1);
-    
+
             assert!(reader.input_scan_code(0xe0).unwrap().is_none());
             assert!(reader.input_scan_code(0xb7).unwrap().is_none());
             assert!(reader.input_scan_code(0xe0).unwrap().is_none());
-            assert_eq!(reader.input_scan_code(0xaa).unwrap().unwrap(), Key::new(ScanType::PrintScreen, KeyState::Released));
+            assert_eq!(
+                reader.input_scan_code(0xaa).unwrap().unwrap(),
+                Key::new(ScanType::PrintScreen, KeyState::Released)
+            );
         }
 
         #[test]
         fn test_pause_pressed() {
             let mut reader = Reader::new(ReaderMode::Set1);
-    
+
             assert!(reader.input_scan_code(0xe1).unwrap().is_none());
             assert!(reader.input_scan_code(0x1d).unwrap().is_none());
             assert!(reader.input_scan_code(0x45).unwrap().is_none());
             assert!(reader.input_scan_code(0xe1).unwrap().is_none());
             assert!(reader.input_scan_code(0x9d).unwrap().is_none());
-            assert_eq!(reader.input_scan_code(0xc5).unwrap().unwrap(), Key::new(ScanType::Pause, KeyState::Pressed));
+            assert_eq!(
+                reader.input_scan_code(0xc5).unwrap().unwrap(),
+                Key::new(ScanType::Pause, KeyState::Pressed)
+            );
         }
 
         #[test]
         fn test_combination_1() {
             let mut reader = Reader::new(ReaderMode::Set1);
-    
+
             assert!(reader.input_scan_code(0xe1).unwrap().is_none());
             assert!(reader.input_scan_code(0x1d).unwrap().is_none());
             assert!(reader.input_scan_code(0x45).unwrap().is_none());
             assert!(reader.input_scan_code(0xe1).unwrap().is_none());
             assert!(reader.input_scan_code(0x9d).unwrap().is_none());
-            assert_eq!(reader.input_scan_code(0xc5).unwrap().unwrap(), Key::new(ScanType::Pause, KeyState::Pressed));
+            assert_eq!(
+                reader.input_scan_code(0xc5).unwrap().unwrap(),
+                Key::new(ScanType::Pause, KeyState::Pressed)
+            );
 
             assert!(reader.input_scan_code(0xe0).unwrap().is_none());
             assert!(reader.input_scan_code(0xb7).unwrap().is_none());
             assert!(reader.input_scan_code(0xe0).unwrap().is_none());
-            assert_eq!(reader.input_scan_code(0xaa).unwrap().unwrap(), Key::new(ScanType::PrintScreen, KeyState::Released));
+            assert_eq!(
+                reader.input_scan_code(0xaa).unwrap().unwrap(),
+                Key::new(ScanType::PrintScreen, KeyState::Released)
+            );
         }
-
 
         #[test]
         fn test_combination_2() {
             let mut reader = Reader::new(ReaderMode::Set1);
-    
-            assert_eq!(reader.input_scan_code(0x14).unwrap().unwrap(), Key::new(ScanType::CharT, KeyState::Pressed));
-            assert_eq!(reader.input_scan_code(0x94).unwrap().unwrap(), Key::new(ScanType::CharT, KeyState::Released));
 
-            assert_eq!(reader.input_scan_code(0x12).unwrap().unwrap(), Key::new(ScanType::CharE, KeyState::Pressed));
-            assert_eq!(reader.input_scan_code(0x92).unwrap().unwrap(), Key::new(ScanType::CharE, KeyState::Released));
+            assert_eq!(
+                reader.input_scan_code(0x14).unwrap().unwrap(),
+                Key::new(ScanType::CharT, KeyState::Pressed)
+            );
+            assert_eq!(
+                reader.input_scan_code(0x94).unwrap().unwrap(),
+                Key::new(ScanType::CharT, KeyState::Released)
+            );
 
-            assert_eq!(reader.input_scan_code(0x1f).unwrap().unwrap(), Key::new(ScanType::CharS, KeyState::Pressed));
-            assert_eq!(reader.input_scan_code(0x9f).unwrap().unwrap(), Key::new(ScanType::CharS, KeyState::Released));
+            assert_eq!(
+                reader.input_scan_code(0x12).unwrap().unwrap(),
+                Key::new(ScanType::CharE, KeyState::Pressed)
+            );
+            assert_eq!(
+                reader.input_scan_code(0x92).unwrap().unwrap(),
+                Key::new(ScanType::CharE, KeyState::Released)
+            );
 
-            assert_eq!(reader.input_scan_code(0x14).unwrap().unwrap(), Key::new(ScanType::CharT, KeyState::Pressed));
-            assert_eq!(reader.input_scan_code(0x94).unwrap().unwrap(), Key::new(ScanType::CharT, KeyState::Released));
+            assert_eq!(
+                reader.input_scan_code(0x1f).unwrap().unwrap(),
+                Key::new(ScanType::CharS, KeyState::Pressed)
+            );
+            assert_eq!(
+                reader.input_scan_code(0x9f).unwrap().unwrap(),
+                Key::new(ScanType::CharS, KeyState::Released)
+            );
+
+            assert_eq!(
+                reader.input_scan_code(0x14).unwrap().unwrap(),
+                Key::new(ScanType::CharT, KeyState::Pressed)
+            );
+            assert_eq!(
+                reader.input_scan_code(0x94).unwrap().unwrap(),
+                Key::new(ScanType::CharT, KeyState::Released)
+            );
         }
     }
 }
