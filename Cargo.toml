@@ -1,5 +1,5 @@
 [package]
-name = "ps2_scancodes"
+name = "voxeon_os_ps2_scancodes"
 version = "0.1.0"
 authors = ["aidos9 <20310468+aidos9@users.noreply.github.com>"]
 edition = "2018"
